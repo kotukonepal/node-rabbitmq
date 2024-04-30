@@ -12,7 +12,8 @@
     "outDir": "./dist",
     "baseUrl": "./src",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "declaration": true
   },
   "ts-node": { "files": true }
 }
