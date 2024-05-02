@@ -24,15 +24,9 @@ export interface QueueData {
 }
 
 export interface RabbitMqInterface<T> {
-  init(): Promise<void>;
-  publishExchange(data: ExchangeData<T>): Promise<void>;
-  assertExchange(
-    exchange: string,
-    exchangeType: string,
-    options: object
-  ): Promise<void>;
-  subscribeToQueues(workerCount: number): Promise<void>;
-  consumeQueue(data: QueueData): void;
+  init(): Promise<{
+    publishExchange: (data: ExchangeData<T>) => Promise<void>;
+  }>;
 }
 
 export interface MQConfig {
