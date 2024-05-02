@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "preinstall": "npm run build"
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.5",
-    "nodemon": "^3.0.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
