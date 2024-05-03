@@ -41,8 +41,6 @@ export class RabbitMq<T> implements RabbitMqInterface<T> {
       validatePublishMessage(data);
       const { queueName, options, payload } = data;
 
-      console.log(options);
-
       this.channel.assertQueue(queueName, { ...options });
 
       this.channel.sendToQueue(
@@ -81,7 +79,7 @@ export class RabbitMq<T> implements RabbitMqInterface<T> {
       async (msg) => {
         if (!msg) return;
         try {
-          await handler(JSON.parse(msg.content.toString()), this.channel);
+          await handler(JSON.parse(msg.content.toString()));
         } catch (err: Error | unknown) {
           onError(err);
         } finally {

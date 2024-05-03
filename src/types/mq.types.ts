@@ -9,7 +9,7 @@ export interface QueueData<T> {
 export interface QueueMetaData {
   queue: string;
   options?: Options.AssertQueue;
-  handler: (msg: Message | null, channel: Channel) => Promise<void>;
+  handler: (msg: Message | null) => Promise<void>;
   onError: (msg: Error | unknown) => void;
 }
 
