@@ -1,31 +1,21 @@
 import { Message, Channel, Options } from "amqplib";
 
-export interface MessageBody<T> {
-  payload: T;
-  properties: {
-    routing_key: string;
-  };
-}
-
-export interface ExchangeData<T> {
-  exchange: string;
-  exchangeType: string;
+export interface QueueData<T> {
+  queueName: string;
   options?: object;
-  body: MessageBody<T>;
+  payload: T;
 }
 
-export interface QueueData {
+export interface QueueMetaData {
   queue: string;
-  exchange: string;
-  exchangeType: string;
-  routingKey: string;
   options?: Options.AssertQueue;
-  handler: (msg: Message | null, channel: Channel) => void;
+  handler: (msg: Message | null, channel: Channel) => Promise<void>;
+  onError: (msg: Error | unknown) => void;
 }
 
 export interface RabbitMqInterface<T> {
   init(): Promise<{
-    publishExchange: (data: ExchangeData<T>) => Promise<void>;
+    publishExchange: (data: QueueData<T>) => Promise<void>;
   }>;
 }
 

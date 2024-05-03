@@ -1,8 +1,8 @@
-import { ExchangeData } from "../../src/types/mq.types";
+import { QueueData } from "../../src/types/mq.types";
 import { ValidationError } from "../error/errors";
 
-const validatePublishMessage = <T>(message: ExchangeData<T>) => {
-  const requiredProperties = ["exchange", "exchangeType", "options", "body"];
+const validatePublishMessage = <T>(message: QueueData<T>) => {
+  const requiredProperties = ["queueName", "options", "payload"];
 
   const missingFields: string[] = [];
 

@@ -1,8 +1,8 @@
 import amqp, { Channel } from "amqplib";
 import {
-  ExchangeData,
-  MQConfig,
   QueueData,
+  MQConfig,
+  QueueMetaData,
   RabbitMqInterface,
 } from "./types/mq.types";
 import {
@@ -14,10 +14,10 @@ import { validatePublishMessage } from "../utils/validation";
 
 export class RabbitMq<T> implements RabbitMqInterface<T> {
   private channel!: Channel;
-  private queueMetadata: QueueData[];
+  private queueMetadata: QueueMetaData[];
   private mqConfig: MQConfig;
 
-  constructor(queueMetadata: QueueData[], mqConfig: MQConfig) {
+  constructor(queueMetadata: QueueMetaData[], mqConfig: MQConfig) {
     this.queueMetadata = queueMetadata;
     this.mqConfig = mqConfig;
   }
@@ -26,35 +26,31 @@ export class RabbitMq<T> implements RabbitMqInterface<T> {
     try {
       const connection = await amqp.connect(this.mqConfig.queue_url);
       this.channel = await connection.createChannel();
-      await this.subscribeToQueues();
+
       return {
         publishExchange: this.publishExchange.bind(this),
+        subscribeToQueues: this.subscribeToQueues.bind(this),
       };
     } catch (err) {
       throw new ConnectionFailError("Error connecting to amqp server");
     }
   }
 
-  private async publishExchange(data: ExchangeData<T>) {
+  private async publishExchange(data: QueueData<T>) {
     try {
       validatePublishMessage(data);
-      const {
-        exchange,
-        exchangeType,
-        options,
-        body: {
-          properties: { routing_key },
-          payload,
-        },
-      } = data;
+      const { queueName, options, payload } = data;
 
-      await this.assertExchange(exchange, exchangeType, options);
+      console.log(options);
 
-      this.channel.publish(
-        exchange,
-        routing_key,
+      this.channel.assertQueue(queueName, { ...options });
+
+      this.channel.sendToQueue(
+        queueName,
         Buffer.from(JSON.stringify(payload)),
-        options
+        {
+          persistent: true,
+        }
       );
     } catch (err) {
       if (err instanceof ValidationError) {
@@ -64,31 +60,37 @@ export class RabbitMq<T> implements RabbitMqInterface<T> {
     }
   }
 
-  private async assertExchange(
-    exchange: string,
-    exchangeType: string,
-    options?: object
-  ): Promise<void> {
-    await this.channel.assertExchange(exchange, exchangeType, options);
-  }
-
   private async subscribeToQueues(): Promise<void> {
     for (const data of this.queueMetadata) {
-      await this.assertExchange(data.exchange, data.exchangeType, data.options);
+      var queue = data.queue;
 
-      await this.channel.assertQueue(data.queue, data.options);
-
-      await this.channel.bindQueue(data.queue, data.exchange, data.routingKey);
+      this.channel.assertQueue(queue, {
+        durable: true,
+      });
+      this.channel.prefetch(1);
       for (let i = 0; i < this.mqConfig.queue_consumers; i++) {
         this.consumeQueue(data);
       }
     }
   }
 
-  private consumeQueue(data: QueueData): void {
-    const { queue, handler } = data;
-    this.channel.consume(queue, (msg) => {
-      handler(msg, this.channel);
-    });
+  private consumeQueue(data: QueueMetaData): void {
+    const { queue, handler, onError } = data;
+    this.channel.consume(
+      queue,
+      async (msg) => {
+        if (!msg) return;
+        try {
+          await handler(JSON.parse(msg.content.toString()), this.channel);
+        } catch (err: Error | unknown) {
+          onError(err);
+        } finally {
+          this.channel.ack(msg);
+        }
+      },
+      {
+        noAck: false,
+      }
+    );
   }
 }
