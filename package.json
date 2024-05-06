@@ -10,13 +10,13 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@types/node": "^20.12.7",
+  "peerDependencies": {
     "amqplib": "^0.10.4"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@types/node": "^20.12.7"
   }
 }

@@ -12,7 +12,7 @@ import {
 } from "../utils/error/errors";
 import { validatePublishMessage } from "../utils/validation";
 
-export class RabbitMq<T> implements RabbitMqInterface<T> {
+export class RabbitMq implements RabbitMqInterface {
   private channel!: Channel;
   private queueMetadata: QueueMetaData[];
   private mqConfig: MQConfig;
@@ -36,7 +36,7 @@ export class RabbitMq<T> implements RabbitMqInterface<T> {
     }
   }
 
-  private async publishExchange(data: QueueData<T>) {
+  private async publishExchange<T>(data: QueueData<T>) {
     try {
       validatePublishMessage(data);
       const { queueName, options, payload } = data;
