@@ -2,7 +2,7 @@ import { QueueData } from "../../src/types/mq.types";
 import { ValidationError } from "../error/errors";
 
 const validatePublishMessage = <T>(message: QueueData<T>) => {
-  const requiredProperties = ["queueName", "options", "payload"];
+  const requiredProperties = ["queueName", "payload"];
 
   const missingFields: string[] = [];
 

@@ -73,22 +73,50 @@ export class RabbitMq implements RabbitMqInterface {
   }
 
   private consumeQueue(data: QueueMetaData): void {
-    const { queue, handler, onError } = data;
+    const { queue, noAck = false } = data;
     this.channel.consume(
       queue,
       async (msg) => {
         if (!msg) return;
-        try {
-          await handler(JSON.parse(msg.content.toString()));
-        } catch (err: Error | unknown) {
-          onError(err);
-        } finally {
-          this.channel.ack(msg);
+
+        if (!noAck) {
+          await this.handlerWithAckOnError(data, msg);
+          return;
         }
+        await this.handlerWithoutAckOnError(data, msg);
       },
       {
         noAck: false,
       }
     );
+  }
+
+  private async handlerWithAckOnError(
+    { handler, onComplete, onError }: QueueMetaData,
+    msg: amqp.ConsumeMessage
+  ) {
+    const msgContent = JSON.parse(msg.content.toString());
+    try {
+      await handler(msgContent);
+      await onComplete(msgContent);
+    } catch (err: Error | unknown) {
+      await onError(err);
+    } finally {
+      this.channel.ack(msg);
+    }
+  }
+
+  private async handlerWithoutAckOnError(
+    { handler, onComplete, onError }: QueueMetaData,
+    msg: amqp.ConsumeMessage
+  ) {
+    const msgContent = JSON.parse(msg.content.toString());
+    try {
+      await handler(msgContent);
+      await onComplete(msgContent);
+      this.channel.ack(msg);
+    } catch (err: Error | unknown) {
+      await onError(err);
+    }
   }
 }
