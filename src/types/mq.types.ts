@@ -20,12 +20,21 @@ export interface QueueMetaData {
 }
 
 export interface RabbitMqInterface {
-  init(): Promise<BrokerInterface>;
+  init(config: MQConfig): Promise<BrokerInterface>;
+}
+
+interface MQConfigQueueUrl {
+  queue_url: string;
 }
 
 export interface MQConfig {
-  queue_url: string;
-  queue_consumers: number;
+  protocol?: string;
+  hostname: string;
+  port: number;
+  username: string;
+  password: string;
+  vhost?: string;
+  consumers?: number;
 }
 
 export interface BrokerInterface {

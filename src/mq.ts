@@ -15,24 +15,35 @@ import { validatePublishMessage } from "../utils/validation";
 export class RabbitMq implements RabbitMqInterface {
   private channel!: Channel;
   private queueMetadata: QueueMetaData[];
-  private mqConfig: MQConfig;
+  private consumers!: number;
 
-  constructor(queueMetadata: QueueMetaData[], mqConfig: MQConfig) {
+  constructor(queueMetadata: QueueMetaData[]) {
     this.queueMetadata = queueMetadata;
-    this.mqConfig = mqConfig;
   }
 
-  async init() {
+  async init(mqConfig: MQConfig) {
     try {
-      const connection = await amqp.connect(this.mqConfig.queue_url);
+      const connection = await amqp.connect({
+        protocol: mqConfig.protocol ?? "amqp",
+        hostname: mqConfig.hostname,
+        port: mqConfig.port,
+        username: mqConfig.username,
+        password: mqConfig.password,
+        vhost: mqConfig.vhost,
+      });
+
+      this.consumers = mqConfig.consumers ?? 3;
+
       this.channel = await connection.createChannel();
 
       return {
         publishExchange: this.publishExchange.bind(this),
         subscribeToQueues: this.subscribeToQueues.bind(this),
       };
-    } catch (err) {
-      throw new ConnectionFailError("Error connecting to amqp server");
+    } catch (err: any) {
+      throw new ConnectionFailError(
+        `Error connecting to amqp server : ${err.message}`
+      );
     }
   }
 
@@ -66,7 +77,7 @@ export class RabbitMq implements RabbitMqInterface {
         durable: true,
       });
       this.channel.prefetch(1);
-      for (let i = 0; i < this.mqConfig.queue_consumers; i++) {
+      for (let i = 0; i < this.consumers; i++) {
         this.consumeQueue(data);
       }
     }
