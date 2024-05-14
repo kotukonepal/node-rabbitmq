@@ -1,8 +1,4 @@
-import { Message, Channel, Options } from "amqplib";
-
-interface ObjectInterface {
-  [x: string]: any;
-}
+import { Options } from "amqplib";
 
 export interface QueueData<T> {
   queueName: string;
@@ -13,9 +9,9 @@ export interface QueueData<T> {
 export interface QueueMetaData {
   queue: string;
   options?: Options.AssertQueue;
-  handler: (data: ObjectInterface) => Promise<void>;
+  handler: (data: any) => Promise<void>;
   onError: (msg: Error | unknown) => Promise<void>;
-  onComplete: (data: ObjectInterface) => Promise<void>;
+  onComplete: (data: any) => Promise<void>;
   noAck: boolean;
 }
 
