@@ -1,5 +1,5 @@
 {
-  "name": "@genesis/queue",
+  "name": "@kotuko/rabbitmq",
   "version": "1.0.1",
   "description": "",
   "main": "dist/src/index.js",
